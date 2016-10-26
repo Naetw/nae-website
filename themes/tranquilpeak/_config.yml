@@ -32,34 +32,34 @@ image_dir: assets/images
 sidebar:
     menu:
         home:
-            title: global.home
+            title: Home
             url: /
             icon: home
         categories:
-            title: global.categories
+            title: Categories
             url: /all-categories
             icon: bookmark
         tags:
-            title: global.tags
+            title: Tags
             url: /all-tags
             icon: tags
         archives:
-            title: global.archives
+            title: Archives
             url: /all-archives
             icon: archive
         search:
-            title: global.search
+            title: Search
             url: /#search
             icon: search
             # `st-search-show-outputs` classes are used to open swiftype search window
             class: st-search-show-outputs
         about:
-            title: global.about
+            title: About
             url: /#about
             icon: question
     author_links:
          github:
-             title: global.github
+             title: Github
              url: https://github.com/Naetw
              icon: github
         # stack_overflow:
@@ -83,12 +83,12 @@ sidebar:
         #     url: https://www.linkedin.com/profile/
         #     icon: linkedin
          mail:
-             title: global.mail
+             title: Mail
              url: mailto:wangzhelee@gmail.com
              icon: envelope-o
     rss:
         rss:
-            title: global.rss
+            title: Rss
             url: /atom.xml
             icon: rss
 
