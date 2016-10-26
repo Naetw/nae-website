@@ -7,7 +7,9 @@ title: Naetw
 subtitle:
 description:
 author: Nae
-language: zh-TW
+language: 
+- zh-TW
+- en
 timezone:
 
 # URL
