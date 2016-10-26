@@ -112,7 +112,7 @@ header:
 # Author
 # Your biography and your job is editable in each languages files in `languages` folder
 author:
-    email:wangzhelee@gmail.com
+    email: wangzhelee@gmail.com
     location:
     # Your profile picture located in folder `source/_images/` (development)
     # or in `source/assets/images/` (production)
