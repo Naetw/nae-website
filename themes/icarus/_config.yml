@@ -1,0 +1,79 @@
+# Menus
+menu:
+  Home: .
+  Archives: archives
+  Github: https://github.com/Naetw
+  Categories: categories
+  Tags: tags
+  About: about
+
+# Customize
+customize:
+    logo:
+        enabled: false
+        width: 40
+        height: 40
+        url: css/images/logo.png 
+    profile:
+        enabled: true # Whether to show profile bar
+        avatar: css/images/491Darkrai.png  
+        gravatar: # Gravatar email address, if you enable Gravatar, your avatar config will be overriden
+        author: Naetw 
+        author_title: Student
+        location: Hsinchu, Taiwan
+        follow: https://github.com/Naetw/
+    highlight: monokai
+    sidebar: right # sidebar position, options: left, right
+    thumbnail: true # enable posts thumbnail, options: true, false
+    favicon: # path to favicon
+    social_links:
+        github: http://github.com/Naetw
+        twitter: /
+        facebook: /
+        dribbble: /
+        rss: /
+    social_link_tooltip: true # enable the social link tooltip, options: true, false
+
+# Widgets
+widgets:
+    - recent_posts
+    - category
+    - archive
+    - tag
+    - tagcloud
+    - links
+
+# Search
+search:
+    insight: true # you need to install `hexo-generator-json-content` before using Insight Search
+    swiftype: # enter swiftype install key here
+    baidu: false # you need to disable other search engines to use Baidu search, options: true, false
+
+# Comment
+comment:
+    disqus: naetw-github-io # enter disqus shortname here
+    duoshuo: # enter duoshuo shortname here
+    youyan: # enter youyan uid here
+
+# Share
+share: addtoany # options: jiathis, bdshare, addtoany, default
+
+# Plugins
+plugins:
+    lightgallery: true # options: true, false
+    justifiedgallery: true # options: true, false
+    google_analytics: UA-86409467-1 
+    google_site_verification: # enter Google site verification code
+    baidu_analytics: # enter Baidu Analytics hash key
+
+# Miscellaneous
+miscellaneous:
+    open_graph: # see http://ogp.me
+        fb_app_id:
+        fb_admins:
+        twitter_id:
+        google_plus:
+    links:
+        Hexo: http://hexo.io
+        Bamboofox: https://bamboofox.github.io
+        Bamboofox-train: http://train.cs.nctu.edu.tw
