@@ -61,6 +61,6 @@ snippets pwn
 
 這樣一來我只要輸入 pwn 之後按下 tab 就可以生出 snippets 裡面所記錄的 code
 
-[Demo](http://i.imgur.com/jyNKSc6.gif)
+![Demo](http://i.imgur.com/jyNKSc6.gif)
 
 <!-- more -->
