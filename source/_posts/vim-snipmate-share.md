@@ -11,7 +11,7 @@ date: 2017-01-04 09:09:00
 
 
 <!-- more -->
-## Install
+# Install
 
 個人是用 [Vundle](https://github.com/gmarik/vundle)，其他安裝方式可以到 github 上去看
 
@@ -61,6 +61,8 @@ snippets pwn
 
 這樣一來我只要輸入 pwn 之後按下 tab 就可以生出 snippets 裡面所記錄的 code
 
-![Demo](http://i.imgur.com/jyNKSc6.gif)
+|                Demo                  |
+|:------------------------------------:|
+|![Demo](http://i.imgur.com/jyNKSc6.gif)|
 
 <!-- more -->
