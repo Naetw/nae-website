@@ -5,10 +5,10 @@ menu:
   Archives: archives
 
 social:
-  email:
+  email: wangzhelee@gmail.com
   twitter:
   weibo:
-  github:
+  github: https://github.com/Naetw
   googleplus:
   rss: /atom.xml
 
@@ -16,6 +16,6 @@ social:
 fancybox: true # set to true if you want to use it
 
 duoshuo: #duoshuo_shortname
-disqus: #disqus _shortname
+disqus: naetw-github-io #disqus _shortname
 google_analytics: #Google Analytics Tracking Code
 google_adsense_page_level_ads: #Google Adsense Page Level Ads Code
