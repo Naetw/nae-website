@@ -65,7 +65,7 @@ article {
     pre {
         @extend .code-block;
         code {
-            background: none;
+            background: $color-background;
             text-shadow: none;
             padding: 0;
         }

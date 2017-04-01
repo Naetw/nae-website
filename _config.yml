@@ -4,9 +4,9 @@
 
 # Site
 title: Naetw 
-subtitle:
-description:
-author: Nae
+subtitle: Pwn is fun.
+description: Pwn is fun.
+author: Naetw
 language: en
 timezone:
 
@@ -69,10 +69,6 @@ feed:
     type: atom
     path: atom.xml
     limit: 20
-
-keywords:
-- hexo
-- CTF
 
 
 # Deployment
