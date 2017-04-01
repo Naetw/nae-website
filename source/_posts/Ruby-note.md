@@ -1,5 +1,5 @@
 title: '[Ruby Note]'
-author: Naetw, brainsp8210
+author: Naetw, Brainsp8210
 tags:
   - Ruby
 categories:
@@ -7,11 +7,7 @@ categories:
 date: 2016-12-05 09:47
 -------------------------
 
-# Ruby Practice
-
-為了用 RoR 架站，跟 @Brainsp8210 一起學點 Ruby 的基礎
-
-<!-- more -->
+> 為了用 RoR 架站，跟 @Brainsp8210 一起學點 Ruby 的基礎
 
 ## String
 Ruby 是 strong typing，不會隱性轉換型別，需特別注意 type error
@@ -990,5 +986,3 @@ end
 [another inject explanation](http://stackoverflow.com/questions/710501/need-a-simple-explanation-of-the-inject-method)
 
 [delegation](https://sharefunyeh.gitbooks.io/webdev/content/articles/understanding-rails-delegate.html?q=)
-
-<!-- more -->

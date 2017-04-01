@@ -7,11 +7,11 @@ categories:
 date: 2017-01-04 09:09:00
 ---
 
-在打 CTF 的時候，每次解 pwn 都要重複打一些基本設定覺得很麻煩很懶，後來發現了 [snipmate](https://github.com/garbas/vim-snipmate) + [vim-snippets](https://github.com/honza/vim-snippets) 覺得滿好用的，很適合我這種懶人
+## Description
 
+> 在打 CTF 的時候，每次解 pwn 都要重複打一些基本設定覺得很麻煩很懶，後來發現了 [snipmate](https://github.com/garbas/vim-snipmate) + [vim-snippets](https://github.com/honza/vim-snippets) 覺得滿好用的，很適合我這種懶人
 
-<!-- more -->
-# Install
+## Install
 
 個人是用 [Vundle](https://github.com/gmarik/vundle)，其他安裝方式可以到 github 上去看
 
@@ -28,7 +28,7 @@ snipmate depends on [vim-addon-mw-utils](https://github.com/marcweber/vim-addon-
 
 而裝了 snipmate 後還沒有任何 snippets 可以用，所以也會裝 vim-snippets，這是 snipmate default snippets，這樣一來就可以支援各種語言
 
-# Usage
+## Usage
 
 平常打 CTF 解 pwn 題基本上都需要:
 
@@ -61,8 +61,6 @@ snippets pwn
 
 這樣一來我只要輸入 pwn 之後按下 tab 就可以生出 snippets 裡面所記錄的 code
 
-|                Demo                  |
-|:------------------------------------:|
+|                Demo                   |
+|:-------------------------------------:|
 |![Demo](http://i.imgur.com/jyNKSc6.gif)|
-
-<!-- more -->

